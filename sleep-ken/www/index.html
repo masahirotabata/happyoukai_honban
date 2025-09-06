@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>睡眠検定 | 10問で今の“睡眠リテラシー”を判定</title>
+  <style>
+    :root{--pink:#e91e63;--bg:#f7f8fc;--card:#fff;--muted:#6b7280;--ink:#0f172a}
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    a{color:var(--pink);text-decoration:none}
+    header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid #eee}
+    .nav{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center}
+    .brand b{color:var(--pink);font-size:18px}
+    .badge{background:#fde7ef;color:var(--pink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+    .btn{appearance:none;border:none;border-radius:999px;background:var(--pink);color:#fff;padding:12px 16px;font-weight:700;cursor:pointer}
+    .btn.ghost{background:#fff;color:var(--pink);border:2px solid var(--pink)}
+    main{max-width:1100px;margin:0 auto;padding:24px 18px}
+    .hero{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:center}
+    @media (max-width:880px){.hero{grid-template-columns:1fr}}
+    .card{background:var(--card);border-radius:18px;box-shadow:0 8px 30px rgba(0,0,0,.06);padding:18px}
+    .hero h1{font-size:clamp(26px,3.8vw,38px);margin:6px 0 10px}
+    .hero p{color:var(--muted);margin:0 0 16px}
+    .kpi{display:flex;gap:14px;flex-wrap:wrap}
+    .kpi .pill{background:#eef2ff;color:#3730a3;border-radius:999px;padding:6px 10px;font-size:12px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+    @media (max-width:880px){.grid{grid-template-columns:1fr}}
+    .h2{margin:0 0 10px;font-size:18px}
+    .muted{color:var(--muted);font-size:13px}
+    .center{text-align:center}
+    .sep{height:1px;background:#eee;margin:12px 0}
+    .ad{height:90px;border:1px dashed #ddd;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:13px;background:#fff}
+    table{width:100%;border-collapse:collapse;font-size:13px}
+    th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
+    .right{text-align:right}
+
+    /* quiz modal */
+    .overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:none;align-items:center;justify-content:center;z-index:100}
+    .modal{background:#fff;width:min(720px,92vw);border-radius:16px;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+    .q-title{font-weight:800;margin:0 0 8px}
+    .q-progress{color:var(--muted);font-size:13px;margin:0 0 12px}
+    .q-option{display:block;width:100%;text-align:left;border:1px solid #e5e7eb;background:#fff;border-radius:12px;padding:12px 14px;margin:8px 0;cursor:pointer}
+    .q-option.correct{border-color:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+    .q-option.wrong{border-color:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15)}
+    .q-exp{background:#f9fafb;border:1px solid #eef;border-radius:10px;padding:10px 12px;margin-top:10px;color:#334155;font-size:14px}
+    .result-rank{font-size:28px;font-weight:800;color:var(--pink);margin:6px 0}
+    .small{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="brand">
+      <b>睡眠検定</b><span class="badge">MVP v2</span>
+    </div>
+    <div>
+      <button class="btn" id="btnStartTop">検定をはじめる</button>
+      <button class="btn ghost" id="btnResults">受検結果を確認</button>
+      <button class="btn ghost" id="btnAbout">概要</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="card">
+      <h1>10問で今の“睡眠リテラシー”を判定</h1>
+      <p>60問の問題バンクからランダムに10問。終了後に<strong>スコア・段位</strong>と解説を表示。スコアは端末に保存され、<strong>直近3回の平均</strong>で段位の目安が決まります。</p>
+      <div class="kpi">
+        <span class="pill">所要 2〜3分</span>
+        <span class="pill">広告で無料</span>
+        <span class="pill">オフラインOK</span>
+      </div>
+      <div style="height:12px"></div>
+      <button class="btn" id="btnStartHero">今すぐ開始</button>
+      <button class="btn ghost" id="btnRankTable">段位表</button>
+    </div>
+    <div class="card">
+      <div class="h2">広告枠（将来差し替え）</div>
+      <div class="ad">[ バナー/動画広告を実装予定 ]</div>
+      <div class="sep"></div>
+      <div class="h2">直近3回のスコア</div>
+      <div class="muted" id="scoreHistory">なし</div>
+    </div>
+  </section>
+
+  <!-- LOWER GRID -->
+  <section class="grid">
+    <div class="card">
+      <div class="h2">段位の目安（v2）</div>
+      <table>
+        <tbody>
+        <tr><td>10級</td><td>S &lt; 50</td></tr>
+        <tr><td>9級〜6級</td><td>50–54 / 55–59 / 60–64 / 65–69</td></tr>
+        <tr><td>5級〜3級</td><td>70–74 / 75–79 / 80–84</td></tr>
+        <tr><td>2級 / 1級</td><td>85–89 / 90–94</td></tr>
+        <tr><td>初段 / 二段</td><td>95–97 / 98–100（MVPではSのみ判定）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="h2">受検結果（最新30件）</div>
+      <div id="history">なし</div>
+    </div>
+  </section>
+</main>
+
+<!-- ===== Onboarding（初回ポップアップ） ===== -->
+<div class="overlay" id="overlayOnb">
+  <div class="modal" style="width:min(640px,92vw)">
+    <h3 class="q-title">遊び方</h3>
+    <ol class="muted" style="margin:0 0 12px 18px">
+      <li>「検定をはじめる」を押す</li>
+      <li>10問に回答（2択）</li>
+      <li>結果画面で段位と解説を確認</li>
+    </ol>
+    <label style="display:flex;gap:8px;align-items:center;margin:10px 0 16px">
+      <input type="checkbox" id="onbNoShow"> 次回以降は表示しない
+    </label>
+    <div class="center">
+      <button class="btn" id="onbClose">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Ad Gate（開始時広告：ブラウザ用フォールバック） ===== -->
+<div class="overlay" id="overlayAd">
+  <div class="modal" style="width:min(640px,92vw)">
+    <h3 class="q-title">広告視聴</h3>
+    <p class="muted">広告視聴後、検定を受検できます。</p>
+    <div class="ad" id="fakeAd">[ 動画広告（擬似） 5 秒 ]</div>
+    <div class="sep"></div>
+    <div class="center">
+      <button class="btn" id="btnAdStart" disabled>受検を開始する</button>
+      <button class="btn ghost" id="btnAdClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Quiz ===== -->
+<div class="overlay" id="overlayQuiz">
+  <div class="modal">
+    <h3 class="q-title" id="qTitle">検定（10問）</h3>
+    <div class="q-progress" id="qProg">1 / 10</div>
+    <div id="qBody"></div>
+    <div class="center" style="margin-top:12px">
+      <button class="btn" id="qNext">次へ</button>
+      <button class="btn ghost" id="qClose">中断</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Results Page（モーダル） ===== -->
+<div class="overlay" id="overlayResults">
+  <div class="modal" style="width:min(820px,95vw)">
+    <h3 class="q-title">受検結果一覧</h3>
+    <div class="muted" style="margin-bottom:8px">日付 / スコア / 段位（最新30件）</div>
+    <div id="resultsBody">なし</div>
+    <div class="sep"></div>
+    <div class="center">
+      <button class="btn" id="resultsClose">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ===== ユーティリティ ===== */
+  const $=s=>document.querySelector(s);
+  const LS={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set(k,v){localStorage.setItem(k,JSON.stringify(v))}};
+  function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+  function rankFromScore(s){return s>=98?"二段":s>=95?"初段":s>=90?"1級":s>=85?"2級":s>=80?"3級":s>=75?"4級":s>=70?"5級":s>=65?"6級":s>=60?"7級":s>=55?"8級":s>=50?"9級":"10級"}
+
+  /* ===== スコア履歴 ===== */
+  function saveScore(score){
+    const key='sleep_hist_v2';
+    const hist=LS.get(key,[]);
+    hist.unshift({score,rank:rankFromScore(score),at:new Date().toISOString(),ver:'2.0.0'});
+    LS.set(key,hist.slice(0,300));
+    renderHistory(); refreshTopScores();
+  }
+  function renderHistory(){
+    const hist=LS.get('sleep_hist_v2',[]);
+    if(!hist.length){ $('#history').textContent='なし'; return; }
+    const rows=hist.slice(0,30).map(h=>`<tr>
+      <td>${new Date(h.at).toLocaleString()}</td>
+      <td class="right">${h.score}</td>
+      <td>${h.rank}</td>
+    </tr>`).join('');
+    $('#history').innerHTML=`<table><tr><th>日時</th><th class="right">スコア</th><th>段位</th></tr>${rows}</table>`;
+  }
+  function refreshTopScores(){
+    const hist=LS.get('sleep_hist_v2',[]);
+    if(!hist.length){ $('#scoreHistory').textContent='なし'; return; }
+    const recent=hist.slice(0,3).map(h=>h.score);
+    const avg=Math.round(recent.reduce((a,b)=>a+b,0)/recent.length);
+    $('#scoreHistory').textContent=`${recent.join(' / ')}（平均 ${avg}）`;
+  }
+
+  /* ===== Onboarding ===== */
+  function maybeShowOnboarding(){
+    if(LS.get('onb_seen_v1',false)) return;
+    $('#overlayOnb').style.display='flex';
+  }
+  $('#onbClose').addEventListener('click',()=>{
+    if($('#onbNoShow').checked) LS.set('onb_seen_v1',true);
+    $('#overlayOnb').style.display='none';
+  });
+
+  /* ===== Ad Gate（ブラウザ用フォールバック） ===== */
+  function openAdGate(){
+    $('#overlayAd').style.display='flex';
+    const btn=$('#btnAdStart');
+    btn.disabled=true;
+    let t=5; $('#fakeAd').textContent='[ 動画広告（擬似） '+t+' 秒 ]';
+    const timer=setInterval(()=>{
+      t--; $('#fakeAd').textContent='[ 動画広告（擬似） '+t+' 秒 ]';
+      if(t<=0){ clearInterval(timer); btn.disabled=false; }
+    },1000);
+  }
+  $('#btnAdStart').addEventListener('click',()=>{ $('#overlayAd').style.display='none'; startQuiz(); });
+  $('#btnAdClose').addEventListener('click',()=>$('#overlayAd').style.display='none');
+
+  /* ===== Quiz（60問バンクから10問） ===== */
+  const QUIZ_BANK = [/* 60問は省略なしでそのまま（ここはあなたの元データ） */
+    {"id":1,"question":"就寝前30分はスマホやPCの使用を控えると入眠を助けることが多い。","options":["正しい","間違い"],"answerIndex":0,"explanation":"強い光や刺激は覚醒を高めるため、控えると入眠しやすくなります。"},
+    /* ...中略... */
+    {"id":60,"question":"“寝具は一度合えば一生同じで良い”は正しい。","options":["正しい","間違い"],"answerIndex":1,"explanation":"体型や好みの変化、寝具の劣化があるため見直しは有効です。"}
+  ];
+
+  let picked=[], qIdx=0, correct=0, answered=false;
+  function startQuiz(){
+    picked=shuffle(QUIZ_BANK.slice()).slice(0,10);
+    qIdx=0; correct=0; answered=false;
+    $('#overlayQuiz').style.display='flex';
+    renderQuestion();
+  }
+  function renderQuestion(){
+    const q=picked[qIdx];
+    $('#qTitle').textContent='検定（10問）';
+    $('#qProg').textContent=`${qIdx+1} / 10`;
+    const body=[];
+    body.push(`<div style="font-weight:700;margin-bottom:6px">${q.question}</div>`);
+    q.options.forEach((op,i)=>body.push(`<button class="q-option" data-i="${i}">${op}</button>`));
+    body.push(`<div id="exp" class="q-exp" style="display:none"></div>`);
+    $('#qBody').innerHTML=body.join('');
+    answered=false;
+    $('#qBody').querySelectorAll('.q-option').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        if(answered) return; answered=true;
+        const sel=+btn.dataset.i;
+        if(sel===q.answerIndex){ correct++; btn.classList.add('correct'); }
+        else { btn.classList.add('wrong'); $('#qBody').querySelectorAll('.q-option')[q.answerIndex].classList.add('correct'); }
+        const exp=$('#exp'); exp.style.display='block'; exp.textContent=q.explanation||'';
+      });
+    });
+    $('#qNext').textContent=(qIdx===9)?'結果を見る':'次へ';
+  }
+  function nextStep(){ if(qIdx<9){ qIdx++; renderQuestion(); } else showResult(); }
+  function showResult(){
+    const score=Math.round((correct/10)*100);
+    const rank=rankFromScore(score);
+    $('#qTitle').textContent='結果';
+    $('#qProg').textContent='';
+    $('#qBody').innerHTML=`
+      <div class="center">
+        <div class="result-rank">${rank}</div>
+        <div style="font-size:40px;font-weight:900;margin-top:-6px">${score}</div>
+        <div class="small">スコア（/100）｜正解 ${correct} / 10</div>
+        <div class="sep"></div>
+        <div class="q-exp">受検結果は端末に保存されます。ヘッダーの「受検結果を確認」からいつでも見返せます。</div>
+        <div style="height:10px"></div>
+        <button class="btn" id="retry">もう一度</button>
+        <button class="btn ghost" id="finish">閉じる</button>
+      </div>`;
+    $('#qNext').style.display='none';
+    $('#qBody #retry').addEventListener('click',()=>{ $('#qNext').style.display='inline-block'; startQuiz(); });
+    $('#qBody #finish').addEventListener('click',()=>$('#overlayQuiz').style.display='none');
+    saveScore(score);
+  }
+
+  /* ===== Results modal ===== */
+  function openResults(){
+    const hist=LS.get('sleep_hist_v2',[]);
+    let html='なし';
+    if(hist.length){
+      const rows=hist.slice(0,30).map(h=>`<tr>
+        <td>${new Date(h.at).toLocaleString()}</td>
+        <td class="right">${h.score}</td>
+        <td>${h.rank}</td>
+      </tr>`).join('');
+      html=`<table><tr><th>日時</th><th class="right">スコア</th><th>段位</th></tr>${rows}</table>`;
+    }
+    $('#resultsBody').innerHTML=html;
+    $('#overlayResults').style.display='flex';
+  }
+
+  /* ===== 初期化 ===== */
+  function init(){
+    renderHistory(); refreshTopScores(); maybeShowOnboarding();
+    // ※ 開始ボタンにはここでは何も結びません（下の1本化で処理）
+    $('#btnRankTable').addEventListener('click', ()=>window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'}));
+    $('#btnAbout').addEventListener('click', ()=>alert('睡眠検定 MVP v2：トップ中心・受検結果ボタン・初回オンボーディング・広告ゲート付き。'));
+    $('#qClose').addEventListener('click', ()=>$('#overlayQuiz').style.display='none');
+    $('#qNext').addEventListener('click', nextStep);
+    $('#btnResults').addEventListener('click', openResults);
+    $('#resultsClose').addEventListener('click', ()=>$('#overlayResults').style.display='none');
+  }
+  init();
+
+  /* ===== 開始ボタンの結線：1本化（AndroidBridge 優先） ===== */
+  (function (){
+    function startWithAds(ev){
+      if (window.AndroidBridge && typeof AndroidBridge.showRewardedAndStart === "function") {
+        ev.preventDefault();
+        AndroidBridge.showRewardedAndStart();   // ネイティブ RewardedAd → 視聴完了で startQuiz()
+        return;
+      }
+      // ブラウザ等のフォールバック
+      if (typeof openAdGate === "function") openAdGate();
+      else if (typeof startQuiz === "function") startQuiz();
+    }
+
+    function wire(){
+      // クイズを開く直前
+      window.native?.hideBanner?.();
+      const nodes = document.querySelectorAll("#btnStartTop,#btnStartHero");
+      // 既存のリスナーを除去して多重起動防止
+      nodes.forEach(btn => btn.replaceWith(btn.cloneNode(true)));
+      document.querySelectorAll("#btnStartTop,#btnStartHero")
+        .forEach(btn => btn.addEventListener("click", startWithAds));
+    }
+
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
+    else wire();
+    // クイズを閉じた/結果を閉じた後
+    window.native?.showHomeBanner?.();
+  })();
+</script>
+<script src="native.js"></script>
+</body>
+</html>
