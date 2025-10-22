@@ -11,14 +11,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node (only if package.json exists)
-        if: ${{ hashFiles('**/package.json') != '' }}
+      - name: Setup Node (only if package.json exists at repo root)
+        if: ${{ hashFiles('package.json') != '' }}
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install deps (ci if lockfile, else install)
-        if: ${{ hashFiles('**/package.json') != '' }}
+        if: ${{ hashFiles('package.json') != '' }}
         run: |
           if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ]; then
             npm ci
@@ -27,7 +27,7 @@ jobs:
           fi
 
       - name: Build (only if build script exists)
-        if: ${{ hashFiles('**/package.json') != '' }}
+        if: ${{ hashFiles('package.json') != '' }}
         run: |
           if npm run | grep -q " build"; then
             npm run build
